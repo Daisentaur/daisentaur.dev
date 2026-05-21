@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>daisentaur — John Doe</title>
+  <meta name="description" content="Personal site of John Doe (daisentaur) — ECE undergrad working on low-level systems, security, and the messy parts of finance." />
+
+  <!-- Open Graph: controls how the link looks when shared on social/in messages -->
+  <meta property="og:title" content="daisentaur — John Doe" />
+  <meta property="og:description" content="ECE undergrad. Low-level systems, security, and the messy parts of finance." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://daisentaur.dev" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Skip link for keyboard/screen-reader users -->
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="wrap">
+      <span class="mark">daisentaur<span class="dot">.dev</span></span>
+      <nav aria-label="Primary">
+        <a href="#about">about</a>
+        <a href="#work">work</a>
+        <a href="#writing">writing</a>
+        <a href="https://github.com/Daisentaur" rel="me noopener" target="_blank">github&nbsp;↗</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- HERO -->
+    <section class="hero wrap">
+      <p class="eyebrow">John Doe <span class="sep">/</span> daisentaur</p>
+      <h1>
+        I build small things to
+        <em>understand</em> the big ones.
+      </h1>
+      <p class="lede">
+        ECE undergrad working through low-level systems, security, and the
+        messier corners of finance — one deliberately-scoped project at a time.
+        This site is a work in progress, much like everything on it.
+      </p>
+      <div class="hero-links">
+        <a class="btn" href="https://github.com/Daisentaur" rel="me noopener" target="_blank">GitHub</a>
+        <!-- EDIT: drop your real contact email in here, or remove this line -->
+        <a class="btn btn-ghost" href="mailto:you@daisentaur.dev">Email</a>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about" class="block wrap">
+      <h2 class="section-label">about</h2>
+      <div class="prose">
+        <p>
+          I'm an Electronics &amp; Communication Engineering undergrad with a
+          stubborn interest in how things actually work underneath the
+          abstraction. Right now that means going deep on C, working through
+          the CompTIA Security+ fundamentals, and automating the boring parts
+          of my life with Python.
+        </p>
+        <p>
+          My through-line is security — I'm aiming at red-team work eventually.
+          The projects below are how I get there: each one is an excuse to
+          internalize something properly rather than skim it.
+        </p>
+      </div>
+
+      <ul class="now">
+        <li><span class="now-key">Learning</span> C, deeply · Sec+ fundamentals · Python automation</li>
+        <li><span class="now-key">Building</span> A password manager from scratch</li>
+        <li><span class="now-key">Aiming&nbsp;at</span> Red-team work, somewhere in Europe</li>
+      </ul>
+    </section>
+
+    <!-- WORK / PROJECTS -->
+    <section id="work" class="block wrap">
+      <h2 class="section-label">work</h2>
+      <p class="block-intro">
+        Pulled live from my public GitHub. The newest pushes float to the top.
+      </p>
+
+      <div id="repos" class="repo-grid" aria-live="polite">
+        <!-- Repos injected here by script.js; this is the fallback while loading -->
+        <p class="repo-status" id="repo-status">Loading projects from GitHub…</p>
+      </div>
+
+      <p class="block-foot">
+        <a href="https://github.com/Daisentaur?tab=repositories" rel="noopener" target="_blank">
+          See everything on GitHub&nbsp;↗
+        </a>
+      </p>
+    </section>
+
+    <!-- WRITING (placeholder section, ready to fill) -->
+    <section id="writing" class="block wrap">
+      <h2 class="section-label">writing</h2>
+      <p class="block-intro">
+        Notes, build logs, and the occasional teardown. Nothing here yet —
+        this is where posts will land as I write them.
+      </p>
+      <div class="placeholder-card">
+        <p>Coming soon. Probably starting with the password manager build log.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer wrap">
+    <p>© <span id="year"></span> John Doe · daisentaur</p>
+    <p class="footer-links">
+      <a href="https://github.com/Daisentaur" rel="me noopener" target="_blank">GitHub</a>
+      <!-- EDIT: add LinkedIn / other socials here as you go -->
+    </p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
