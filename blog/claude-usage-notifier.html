@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A 403, a fake browser, and my own session cookie — daisentaur</title>
+  <meta name="description" content="Build journal: writing a desktop notifier for my claude.ai usage, and learning that Cloudflare fingerprints the TLS handshake itself — not just the headers." />
+
+  <meta property="og:title" content="A 403, a fake browser, and my own session cookie" />
+  <meta property="og:description" content="Build journal for the claude-usage-notifier — TLS fingerprinting, a leaked cookie, and the stale-while-error pattern." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://daisentaur.dev/blog/claude-usage-notifier.html" />
+
+  <link rel="icon" href="../favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" href="../favicon-32.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    .post { max-width: 680px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+    .post-head { padding: 70px 0 40px; border-bottom: 1px solid var(--line); }
+    .post-head .back { font-size: 0.85rem; color: var(--ink-mute); }
+    .post-head .back:hover { color: var(--accent); }
+    .post-head .meta {
+      display: block; margin: 28px 0 12px;
+      font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-mute);
+    }
+    .post-head h1 {
+      font-family: var(--font-display); font-weight: 500;
+      font-size: clamp(1.9rem, 5vw, 2.8rem); line-height: 1.12;
+      letter-spacing: -0.02em; margin: 0;
+    }
+    .post-body { padding: 44px 0 30px; }
+    .post-body h2 {
+      font-family: var(--font-display); font-weight: 500;
+      font-size: 1.5rem; margin: 48px 0 14px; letter-spacing: -0.01em;
+    }
+    .post-body p { color: var(--ink-soft); margin: 0 0 18px; }
+    .post-body ul { color: var(--ink-soft); padding-left: 22px; margin: 0 0 18px; }
+    .post-body li { margin-bottom: 8px; }
+    .post-body strong { color: var(--ink); font-weight: 500; }
+    .post-body code {
+      font-family: var(--font-mono); font-size: 0.86em;
+      background: var(--paper-2); border: 1px solid var(--line);
+      padding: 1px 5px; border-radius: 3px;
+    }
+    .post-body pre {
+      background: var(--paper-2); border: 1px solid var(--line);
+      padding: 16px 18px; overflow-x: auto; margin: 0 0 22px;
+      font-size: 0.84rem; line-height: 1.55;
+    }
+    .post-body pre code { background: none; border: none; padding: 0; }
+    .callout {
+      border-left: 3px solid var(--accent);
+      background: var(--paper-2);
+      padding: 14px 18px; margin: 0 0 22px;
+      font-size: 0.92rem; color: var(--ink-soft);
+    }
+    .callout strong { color: var(--accent); }
+    .post-foot {
+      border-top: 1px solid var(--line); padding: 30px 0 70px;
+      font-size: 0.9rem; color: var(--ink-mute);
+    }
+    .post-foot a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="mark" href="../index.html" style="color:inherit;text-decoration:none">daisentaur<span class="dot">.dev</span></a>
+      <nav aria-label="Primary">
+        <a href="../index.html#about">about</a>
+        <a href="../index.html#work">work</a>
+        <a href="../index.html#writing">writing</a>
+        <a href="https://github.com/Daisentaur" rel="me noopener" target="_blank">github&nbsp;&#8599;</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <article>
+      <div class="post-head post">
+        <a class="back" href="../index.html#writing">&#8592; writing</a>
+        <span class="meta">Build journal &middot; 2026-05-20</span>
+        <h1>A 403, a fake browser, and my own session cookie</h1>
+      </div>
+
+      <div class="post-body post">
+        <p>
+          I wanted a keyboard shortcut that pops my claude.ai usage stats into a
+          desktop notification. The settings page works fine, but checking it
+          means opening a tab, navigating to settings, switching to the usage
+          panel, and waiting for it to load. I wanted one keypress.
+        </p>
+        <p>
+          What I thought would be a quick scrape turned into a small tour of how
+          Cloudflare actually decides whether you're a browser &mdash; and a
+          reminder that a session cookie is a password. This is the build log:
+          what I did, what broke, and what I now know that I didn't before. The
+          finished tool is on
+          <a href="https://github.com/Daisentaur/claude-usage-notifier" rel="noopener" target="_blank">GitHub</a>.
+        </p>
+
+        <h2>Step zero: is this even possible?</h2>
+        <p>
+          claude.ai doesn't expose a public API for chat usage. The Admin API over
+          on the console covers <em>API</em> consumption &mdash; a separate billing
+          surface &mdash; not Pro-plan chat usage. So if I wanted this number from
+          a script, scraping was the only path.
+        </p>
+        <p>
+          Three ways to scrape it: drive a real browser with Playwright (heavy),
+          reverse-engineer the internal API (fragile but light), or reuse the
+          session my logged-in Firefox already has by reading its cookies. The
+          third is the cleanest &mdash; no second login, no API key, no automation
+          framework. Just "do what the browser does, but from Python."
+        </p>
+
+        <h2>Finding the endpoint</h2>
+        <p>
+          claude.ai &rarr; DevTools &rarr; Network tab &rarr; filter to XHR &rarr;
+          reload the usage page. About thirty requests came back; one was literally
+          named <code>usage</code>. The URL was
+          <code>https://claude.ai/api/organizations/&lt;org-uuid&gt;/usage</code>,
+          and the response was clean JSON &mdash; <code>five_hour</code>,
+          <code>seven_day</code>, and a pile of nulls and internal codename fields
+          (<code>tangelo</code>, <code>iguana_necktie</code>&hellip;) that I ignored.
+        </p>
+        <p>
+          DevTools has a <strong>right-click &rarr; Copy &rarr; Copy as cURL</strong>
+          that dumps the entire request &mdash; every header and cookie &mdash; as a
+          runnable command. Great for reconnaissance. Also the source of my first
+          mistake.
+        </p>
+
+        <h2>Mistake #1: I leaked my own session cookie</h2>
+        <p>
+          When I copied that cURL command out to look at it, it carried the live
+          <code>sessionKey</code> cookie with it. That cookie is functionally my
+          password &mdash; anyone holding it is logged in as me, no credentials
+          needed. The moment I realized it had left a safe place, I logged out of
+          all sessions to invalidate it.
+        </p>
+        <div class="callout">
+          <strong>Lesson.</strong> Header <em>names</em> are safe to share; header
+          <em>values</em> are not. Before a request shape goes anywhere &mdash; a
+          chat, an issue, a blog post &mdash; the entire <code>Cookie:</code> line
+          gets redacted. Like this:
+        </div>
+        <pre><code>curl 'https://claude.ai/api/organizations/XXXX/usage' \
+  -H 'User-Agent: Mozilla/5.0 ...' \
+  -H 'Cookie: XXXXXXXXXXXXXXXX'   # never the real values</code></pre>
+        <p>
+          I'm including this mistake on purpose. It's the most useful thing in the
+          whole project: the failure mode for credential leaks isn't malice, it's a
+          convenient "copy" button and not thinking for two seconds.
+        </p>
+
+        <h2>Mistake #2: HTTP 403, "Just a moment&hellip;"</h2>
+        <p>
+          First real run, with cookies loaded and the request built:
+          <code>403</code>, and a body starting
+          <code>&lt;!DOCTYPE html&gt;&hellip;Just a moment&hellip;</code>. That's
+          Cloudflare's bot-challenge page. So I checked the obvious things:
+        </p>
+        <ul>
+          <li>
+            <strong>User-Agent?</strong> Matched my real Firefox (confirmed with
+            <code>navigator.userAgent</code> in the console). Not it.
+          </li>
+          <li>
+            <strong>Cookies present?</strong> Wrote a throwaway script to dump
+            them &mdash; <code>sessionKey</code>, <code>cf_clearance</code>,
+            <code>__cf_bm</code>, <code>lastActiveOrg</code> all there. Not it.
+          </li>
+        </ul>
+        <p>
+          The headers were perfect and Cloudflare still said no. The reason turned
+          out to be a layer below the headers entirely: the
+          <strong>TLS handshake itself</strong>.
+        </p>
+
+        <h2>The actual lesson: Cloudflare fingerprints the handshake</h2>
+        <p>
+          When any client opens a TLS connection, the very first message (the
+          ClientHello) advertises which cipher suites it supports, in what order,
+          plus a list of TLS extensions. Different software produces
+          characteristically different ClientHellos &mdash; and you can hash that
+          shape into a fingerprint. The common name for this is <strong>JA3</strong>.
+        </p>
+        <p>
+          Python's <code>requests</code> talks TLS through OpenSSL, whose
+          ClientHello looks nothing like Firefox's. So Cloudflare could see &mdash;
+          before a single header was read &mdash; that whatever was connecting was
+          not the browser it claimed to be in its User-Agent. Headers said
+          "Firefox," the handshake said "Python." Cloudflare believed the handshake.
+        </p>
+        <p>
+          The fix is a library called <code>curl_cffi</code>: a near drop-in
+          replacement for <code>requests</code> that runs on libcurl and can
+          imitate a real browser's TLS fingerprint.
+        </p>
+        <pre><code>from curl_cffi import requests
+requests.get(url, headers=HEADERS, cookies=jar, impersonate="firefox133")</code></pre>
+        <p>
+          That one <code>impersonate</code> argument reshapes the handshake to look
+          like Firefox. Same <code>.get()</code> API, same response object &mdash;
+          only the bytes on the wire change. Worked first try.
+        </p>
+        <div class="callout">
+          <strong>A detail I left in on purpose.</strong> My request headers send a
+          User-Agent string for one Firefox version while <code>impersonate</code>
+          mimics a slightly different one. They don't have to agree &mdash; because
+          they're answering different questions. The header is a <em>claim</em> the
+          server reads; the fingerprint is <em>evidence</em> from how the connection
+          was built. Cloudflare cross-checks both, but neither requires the other to
+          match exactly. Realizing the header and the handshake are separate,
+          independently-inspected things is the whole point of this post.
+        </div>
+        <p>
+          And to be clear about what this is: it's a script reading <em>my own</em>
+          account's data, presenting itself honestly as the browser whose session
+          it's already borrowing. It's not an exploit &mdash; it's doing the same
+          handshake my browser does. But it taught me that "looks like a browser" is
+          a much deeper question than setting a User-Agent string, which is a
+          genuinely useful thing to understand from both sides.
+        </p>
+
+        <h2>Making it survive the real world</h2>
+        <p>
+          A script bound to a keyboard shortcut has no terminal to print errors
+          into, and networks fail. So the fetch is wrapped in a
+          <strong>stale-while-error</strong> pattern: fresh cache wins if it's
+          within its TTL; otherwise try the network; if the network fails, fall back
+          to <em>any</em> cached data &mdash; even expired &mdash; and label it stale
+          rather than showing nothing.
+        </p>
+        <pre><code>fresh cache?      -> use it
+else fetch        -> on success, cache it
+fetch failed?     -> use stale cache, mark "Stale data (N min old)"
+no cache at all?  -> surface a clear error notification</code></pre>
+        <p>
+          A transient Cloudflare hiccup leaves me looking at slightly old numbers
+          with an honest stale marker, not a broken popup. Around that core there's
+          a config file (so tweaking a threshold isn't a code edit), logging to
+          <code>~/.cache</code> with crude size-based rotation, and error
+          notifications that say what to actually do ("Open claude.ai in Firefox").
+        </p>
+
+        <h2>Things I now know that I didn't</h2>
+        <ul>
+          <li>TLS fingerprinting (JA3) is real, and Cloudflare actually checks it.</li>
+          <li>A session cookie is functionally a password &mdash; treat it like one.</li>
+          <li>
+            Snap apps store data under <code>~/snap/&lt;app&gt;/&hellip;</code>, not
+            the usual dotfile paths &mdash; which is why Ubuntu's snap-Firefox profile
+            isn't where you'd expect.
+          </li>
+          <li>
+            GNOME custom shortcuts don't inherit your shell environment, so the
+            command needs the venv's Python by absolute path, not bare
+            <code>python3</code>.
+          </li>
+          <li>
+            <code>cf_clearance</code> is bound to your IP <em>and</em> User-Agent
+            &mdash; change either and it's invalid even before it expires.
+          </li>
+        </ul>
+
+        <h2>What I'd do differently</h2>
+        <p>
+          Write a five-line spike to confirm the endpoint <em>before</em> designing a
+          whole script around it. I'd have hit the 403 in the first five minutes and
+          learned about TLS fingerprinting before writing a hundred lines that
+          assumed the easy path. And set up <code>.gitignore</code> first, before any
+          <code>pip install</code> &mdash; so the venv never exists in git's eyes,
+          even for one commit.
+        </p>
+      </div>
+
+      <div class="post-foot post">
+        <p>
+          Code:
+          <a href="https://github.com/Daisentaur/claude-usage-notifier" rel="noopener" target="_blank">
+            github.com/Daisentaur/claude-usage-notifier&nbsp;&#8599;
+          </a>
+          <br />
+          <a href="../index.html#writing">&#8592; back to writing</a>
+        </p>
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer wrap">
+    <p>&copy; <span id="year"></span> daisentaur</p>
+    <p class="footer-links">
+      <a href="https://github.com/Daisentaur" rel="me noopener" target="_blank">GitHub</a>
+    </p>
+  </footer>
+
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
