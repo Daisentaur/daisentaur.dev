@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The cheapest file is a Markdown file — daisentaur</title>
+  <meta name="description" content="Build journal: a little self-hosted service that turns any file into Markdown so my LLM agents stop paying for formatting they never read — assembled from tools I didn't write." />
+
+  <meta property="og:title" content="The cheapest file is a Markdown file" />
+  <meta property="og:description" content="Turning every uploaded file into Markdown to cut LLM token cost — a wrapper around markitdown, with OCR bolted on for scans." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://daisentaur.dev/blog/markitdown-web.html" />
+
+  <link rel="icon" href="../favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" href="../favicon-32.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    .post { max-width: 680px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+    .post-head { padding: 70px 0 40px; border-bottom: 1px solid var(--line); }
+    .post-head .back { font-size: 0.85rem; color: var(--ink-mute); }
+    .post-head .back:hover { color: var(--accent); }
+    .post-head .meta {
+      display: block; margin: 28px 0 12px;
+      font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-mute);
+    }
+    .post-head h1 {
+      font-family: var(--font-display); font-weight: 500;
+      font-size: clamp(1.9rem, 5vw, 2.8rem); line-height: 1.12;
+      letter-spacing: -0.02em; margin: 0;
+    }
+    .post-body { padding: 44px 0 30px; }
+    .post-body h2 {
+      font-family: var(--font-display); font-weight: 500;
+      font-size: 1.5rem; margin: 48px 0 14px; letter-spacing: -0.01em;
+    }
+    .post-body p { color: var(--ink-soft); margin: 0 0 18px; }
+    .post-body ul { color: var(--ink-soft); padding-left: 22px; margin: 0 0 18px; }
+    .post-body li { margin-bottom: 8px; }
+    .post-body strong { color: var(--ink); font-weight: 500; }
+    .post-body code {
+      font-family: var(--font-mono); font-size: 0.86em;
+      background: var(--paper-2); border: 1px solid var(--line);
+      padding: 1px 5px; border-radius: 3px;
+    }
+    .post-body pre {
+      background: var(--paper-2); border: 1px solid var(--line);
+      padding: 16px 18px; overflow-x: auto; margin: 0 0 22px;
+      font-size: 0.84rem; line-height: 1.55;
+    }
+    .post-body pre code { background: none; border: none; padding: 0; }
+    .callout {
+      border-left: 3px solid var(--accent);
+      background: var(--paper-2);
+      padding: 14px 18px; margin: 0 0 22px;
+      font-size: 0.92rem; color: var(--ink-soft);
+    }
+    .callout strong { color: var(--accent); }
+    .post-foot {
+      border-top: 1px solid var(--line); padding: 30px 0 70px;
+      font-size: 0.9rem; color: var(--ink-mute);
+    }
+    .post-foot a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="mark" href="../index.html" style="color:inherit;text-decoration:none">daisentaur<span class="dot">.dev</span></a>
+      <nav aria-label="Primary">
+        <a href="../index.html#about">about</a>
+        <a href="../index.html#work">work</a>
+        <a href="../index.html#writing">writing</a>
+        <a href="https://github.com/Daisentaur" rel="me noopener" target="_blank">github&nbsp;&#8599;</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <article>
+      <div class="post-head post">
+        <a class="back" href="../index.html#writing">&#8592; writing</a>
+        <span class="meta">Build journal &middot; 2026-07-03</span>
+        <h1>The cheapest file is a Markdown file</h1>
+      </div>
+
+      <div class="post-body post">
+        <p>
+          I kept handing files to LLM agents &mdash; a PDF here, a spreadsheet
+          there &mdash; and quietly paying for it. Not in dollars I noticed at
+          the time, but in <strong>tokens</strong>: the little units of text a
+          model charges you for, both to read your stuff and to answer. And a
+          raw file is an expensive way to say something simple.
+        </p>
+        <p>
+          So I built a small service that takes any file you throw at it and
+          hands back plain Markdown. It's live on my homelab, I use it from a
+          browser, and my agents call it before they do their real work. This is
+          the build log &mdash; less about the code, more about why the whole
+          thing is mostly other people's code, and why that was the right call.
+        </p>
+
+        <h2>Why a PDF is expensive and Markdown isn't</h2>
+        <p>
+          Here's the thing that isn't obvious until you look. A model doesn't
+          read a file the way you do. A PDF or a Word document is a container
+          &mdash; underneath the words there's a pile of structure describing
+          fonts, positions, styling, embedded metadata, all the machinery that
+          makes it <em>look</em> like a document on screen. To the model, a lot
+          of that turns into tokens too. You're paying to ship the formatting,
+          and the model has to wade through it to find the two sentences you
+          actually cared about.
+        </p>
+        <p>
+          Markdown throws all of that away and keeps the part that carries
+          meaning: the headings, the lists, the tables, the words. Same content,
+          a fraction of the tokens. A hefty report that lands as thousands of
+          tokens of PDF becomes a few hundred tokens of clean text &mdash; and
+          the model reasons better over the clean version, because there's less
+          noise between it and the point.
+        </p>
+        <div class="callout">
+          <strong>The whole idea in one line.</strong> Convert the file to
+          Markdown <em>before</em> the model sees it. You spend less, and the
+          model thinks straighter. That's it. Everything else is plumbing.
+        </div>
+
+        <h2>The best code is the code you don't write</h2>
+        <p>
+          My first instinct was to figure out how to parse a PDF. My second,
+          better instinct was to check whether someone had already spent years
+          doing that so I didn't have to. They had. Microsoft maintains a library
+          called <strong>markitdown</strong> whose entire job is turning files
+          &mdash; PDF, Word, PowerPoint, Excel, HTML, audio, CSV, a dozen more
+          &mdash; into Markdown. It's very good, and it's free.
+        </p>
+        <p>
+          So I didn't build a converter. I built a thin wrapper around one: a
+          little web page you can drag files onto, and an address my agents can
+          send files to. The interesting engineering wasn't in the conversion at
+          all &mdash; it was in making one good tool <em>convenient</em>, and
+          then honest about the one thing it couldn't do.
+        </p>
+
+        <h2>The one thing it couldn't do: read a picture</h2>
+        <p>
+          markitdown reads text that's <em>already text</em>. Give it a scanned
+          document &mdash; a photo of a page, a receipt someone snapped with
+          their phone &mdash; and it comes back with almost nothing, because to a
+          computer that "page" is just an image. There are no words in there yet.
+          Pulling words out of a picture is a separate, genuinely hard problem
+          with its own name: OCR, optical character recognition.
+        </p>
+        <p>
+          And again &mdash; not my wheel to reinvent. This is one of the
+          most-worked-on problems in computing. I reached for two mature
+          open-source tools and let them do the reading:
+        </p>
+        <ul>
+          <li>
+            <strong>Tesseract</strong>, a decades-old OCR engine, handles loose
+            images.
+          </li>
+          <li>
+            <strong>OCRmyPDF</strong> handles scanned PDFs &mdash; it quietly
+            reads the pages and stitches a real text layer back into the file, so
+            markitdown can then read it like any normal document.
+          </li>
+        </ul>
+        <p>
+          The nice part is that this only wakes up when it's needed. A normal
+          text file sails straight through untouched; only a scan or an image
+          gets the slower OCR treatment. You don't pay for it unless you use it.
+        </p>
+        <div class="callout">
+          <strong>Where I drew the line honestly.</strong> These tools read
+          <em>printed</em> text well and <em>handwriting</em> badly &mdash;
+          sometimes not at all. Reading handwriting reliably needs a heavier
+          kind of AI model and a beefier machine than my little always-on
+          laptop. So rather than half-promise it, the app says so out loud: a
+          warning in the interface, a note in the docs. Knowing what your tool
+          <em>can't</em> do, and admitting it, is part of the tool.
+        </div>
+
+        <h2>Built for me, and for my agents talking to each other</h2>
+        <p>
+          There are two kinds of visitor here. There's me, in a browser, who
+          wants to log in, drag a file, and read the result. And there are my
+          agents &mdash; little AI programs running across different projects
+          &mdash; who don't have hands to log in with. They need to knock on the
+          door with a key instead of a password.
+        </p>
+        <p>
+          So the service has both doors. I get a normal login. Each agent gets a
+          secret key it sends along with its request, and one line is enough for
+          it to get Markdown back:
+        </p>
+        <pre><code>curl -H "X-API-Key: my-secret-key" \
+     -F "files=@report.pdf" \
+     https://markdown.mydomain/api/convert</code></pre>
+        <p>
+          That's the part I find quietly satisfying. When one of my agents needs
+          to hand a messy file to another, it doesn't ship the whole expensive
+          PDF &mdash; it drops it here first and passes on the lean Markdown. The
+          service becomes a shared little utility my tools use to talk to each
+          other more cheaply. I'm not in the loop at all; I just built the
+          water fountain and walked away.
+        </p>
+
+        <h2>What I actually built</h2>
+        <p>
+          Counting honestly, I wrote very little. The conversion is Microsoft's.
+          The OCR is Tesseract's and OCRmyPDF's. The part that's mine is the
+          glue: a small web app, two ways in, a bit of logic that decides when a
+          file needs OCR, and the plumbing to run it on my own hardware behind a
+          secure tunnel so I can reach it from anywhere.
+        </p>
+        <p>
+          And I think that's the actual lesson, the one I keep relearning on
+          these projects. A useful tool isn't always a clever new invention. Very
+          often it's a handful of excellent existing tools, pointed at one
+          specific job, wrapped so a human or a machine can use them without
+          thinking &mdash; and honest about the edges. Fewer tokens, borrowed
+          wheels, a steering column I bolted on myself.
+        </p>
+      </div>
+
+      <div class="post-foot post">
+        <p>
+          Code:
+          <a href="https://github.com/Daisentaur/local-markdown" rel="noopener" target="_blank">
+            github.com/Daisentaur/local-markdown&nbsp;&#8599;
+          </a>
+          <br />
+          <a href="../index.html#writing">&#8592; back to writing</a>
+        </p>
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer wrap">
+    <p>&copy; <span id="year"></span> daisentaur</p>
+    <p class="footer-links">
+      <a href="https://github.com/Daisentaur" rel="me noopener" target="_blank">GitHub</a>
+    </p>
+  </footer>
+
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
