@@ -20,16 +20,19 @@
     --maxw: 760px;
 }
 
-@media (prefers-color-scheme: dark) {
-    :root {
-        --paper: #16150f;
-        --paper-2: #1f1d16;
-        --ink: #ece8dd;
-        --ink-soft: #c4bfb1;
-        --ink-mute: #8a8576;
-        --accent: #d98b6f;
-        --line: #2e2b22;
-    }
+/* Dark palette. Driven by the [data-theme="dark"] attribute (set by the
+   toggle / the no-flash script in index.html) rather than the OS media query,
+   so visitors can override their system preference and we can animate the
+   switch. First-visit default still follows the OS — that choice is made in
+   the inline <head> script. */
+:root[data-theme="dark"] {
+    --paper: #16150f;
+    --paper-2: #1f1d16;
+    --ink: #ece8dd;
+    --ink-soft: #c4bfb1;
+    --ink-mute: #8a8576;
+    --accent: #d98b6f;
+    --line: #2e2b22;
 }
 
 * {
@@ -49,6 +52,11 @@ body {
     line-height: 1.65;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    /* Fallback smoothing for the theme switch when the View Transitions
+       reveal isn't available (older browsers / reduced-motion). */
+    transition:
+        background-color 0.6s cubic-bezier(0.65, 0, 0.35, 1),
+        color 0.6s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 /* Subtle paper grain so the background isn't a dead flat colour */
@@ -118,6 +126,7 @@ a:hover {
 }
 .site-header nav {
     display: flex;
+    align-items: center;
     gap: 20px;
     font-size: 0.85rem;
 }
@@ -126,6 +135,48 @@ a:hover {
 }
 .site-header nav a:hover {
     color: var(--accent);
+}
+
+/* ---------- Theme toggle button ---------- */
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid var(--line);
+    background: var(--paper-2);
+    color: var(--ink-soft);
+    cursor: pointer;
+    /* Keep the site's sharp-cornered, no-rounding look */
+    border-radius: 0;
+    transition:
+        border-color 0.15s ease,
+        color 0.15s ease,
+        transform 0.15s ease;
+}
+.theme-toggle:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+}
+.theme-toggle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+.theme-toggle svg {
+    display: block;
+}
+/* Light mode shows the moon (→ go dark); dark mode shows the sun (→ go light) */
+.theme-toggle .icon-sun {
+    display: none;
+}
+:root[data-theme="dark"] .theme-toggle .icon-moon {
+    display: none;
+}
+:root[data-theme="dark"] .theme-toggle .icon-sun {
+    display: block;
 }
 
 /* ---------- Hero ---------- */
@@ -405,4 +456,61 @@ a:hover {
     display: block;
     color: var(--ink-soft);
     font-size: 0.92rem;
+}
+
+/* ============================================================
+   Animated theme switch — View Transitions API
+   The new colour scheme is revealed on top of the old one through
+   an animated, transparent Hunter × Hunter GIF used as a mask: it
+   scales in, loops for a beat, then blows out to fill the screen.
+   Same technique as the "dancing girl" reveal on ni5arga.com.
+   Swap theme-reveal.gif to change the character (must be a
+   transparent animated GIF).
+   Progressive enhancement: browsers without startViewTransition just
+   get the instant switch + the body colour transition above.
+   ============================================================ */
+::view-transition-group(root) {
+    animation-timing-function: cubic-bezier(0.7, 0, 0.84, 0);
+    z-index: 100;
+}
+/* Give BOTH layers the same animation so the OLD theme stays fully
+   opaque underneath (this overrides the default cross-fade) while the
+   NEW theme grows in through the mask on top. */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: theme-reveal 1.35s cubic-bezier(0.7, 0, 0.84, 0) both;
+    mix-blend-mode: normal;
+}
+::view-transition-new(root) {
+    -webkit-mask: url("theme-reveal.gif") 50% / 0 no-repeat;
+    mask: url("theme-reveal.gif") 50% / 0 no-repeat;
+}
+@keyframes theme-reveal {
+    0% {
+        -webkit-mask-size: 0;
+        mask-size: 0;
+    }
+    16% {
+        -webkit-mask-size: 24vmax;
+        mask-size: 24vmax;
+    }
+    62% {
+        -webkit-mask-size: 24vmax;
+        mask-size: 24vmax;
+    }
+    100% {
+        -webkit-mask-size: 800vmax;
+        mask-size: 800vmax;
+    }
+}
+/* Respect reduced-motion: skip the reveal, keep the instant switch. */
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation: none;
+    }
+    ::view-transition-new(root) {
+        -webkit-mask: none;
+        mask: none;
+    }
 }

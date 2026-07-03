@@ -92,3 +92,37 @@ function escapeHtml(str) {
 }
 
 loadRepos();
+
+/* ------------------------------------------------------------
+   Theme toggle
+   The initial theme is set before paint by the inline script in
+   index.html. Here we just handle clicks: flip data-theme, persist
+   the choice, and — where supported — run the flip inside a View
+   Transition so the CSS Killua-mask reveal plays.
+   ------------------------------------------------------------ */
+const themeToggle = document.querySelector(".theme-toggle");
+if (themeToggle) {
+  themeToggle.addEventListener("click", () => {
+    const root = document.documentElement;
+    const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+
+    const apply = () => {
+      root.setAttribute("data-theme", next);
+      try {
+        localStorage.setItem("theme", next);
+      } catch (e) {
+        /* private mode / storage disabled — the switch still works, just isn't remembered */
+      }
+    };
+
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    if (document.startViewTransition && !reduceMotion) {
+      document.startViewTransition(apply);
+    } else {
+      apply();
+    }
+  });
+}
