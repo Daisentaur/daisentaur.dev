@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My bots lie to me when I sleep — daisentaur</title>
+  <meta name="description" content="Build journal: spider-base, a browser-automation base I clone per site — and learning that the hard part of an unattended bot isn't the scraping, it's that you're not there when it breaks." />
+
+  <meta property="og:title" content="My bots lie to me when I sleep" />
+  <meta property="og:description" content="Build journal for spider-base — a selector that died overnight, a headless browser that rendered differently when unwatched, and why the real engineering is failing loudly." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://daisentaur.dev/blog/spider-base.html" />
+
+  <link rel="icon" href="../favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" href="../favicon-32.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    .post { max-width: 680px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+    .post-head { padding: 70px 0 40px; border-bottom: 1px solid var(--line); }
+    .post-head .back { font-size: 0.85rem; color: var(--ink-mute); }
+    .post-head .back:hover { color: var(--accent); }
+    .post-head .meta {
+      display: block; margin: 28px 0 12px;
+      font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-mute);
+    }
+    .post-head h1 {
+      font-family: var(--font-display); font-weight: 500;
+      font-size: clamp(1.9rem, 5vw, 2.8rem); line-height: 1.12;
+      letter-spacing: -0.02em; margin: 0;
+    }
+    .post-body { padding: 44px 0 30px; }
+    .post-body h2 {
+      font-family: var(--font-display); font-weight: 500;
+      font-size: 1.5rem; margin: 48px 0 14px; letter-spacing: -0.01em;
+    }
+    .post-body p { color: var(--ink-soft); margin: 0 0 18px; }
+    .post-body ul { color: var(--ink-soft); padding-left: 22px; margin: 0 0 18px; }
+    .post-body li { margin-bottom: 8px; }
+    .post-body strong { color: var(--ink); font-weight: 500; }
+    .post-body code {
+      font-family: var(--font-mono); font-size: 0.86em;
+      background: var(--paper-2); border: 1px solid var(--line);
+      padding: 1px 5px; border-radius: 3px;
+    }
+    .post-body pre {
+      background: var(--paper-2); border: 1px solid var(--line);
+      padding: 16px 18px; overflow-x: auto; margin: 0 0 22px;
+      font-size: 0.84rem; line-height: 1.55;
+    }
+    .post-body pre code { background: none; border: none; padding: 0; }
+    .callout {
+      border-left: 3px solid var(--accent);
+      background: var(--paper-2);
+      padding: 14px 18px; margin: 0 0 22px;
+      font-size: 0.92rem; color: var(--ink-soft);
+    }
+    .callout strong { color: var(--accent); }
+    .post-foot {
+      border-top: 1px solid var(--line); padding: 30px 0 70px;
+      font-size: 0.9rem; color: var(--ink-mute);
+    }
+    .post-foot a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="mark" href="../index.html" style="color:inherit;text-decoration:none">daisentaur<span class="dot">.dev</span></a>
+      <nav aria-label="Primary">
+        <a href="../index.html#about">about</a>
+        <a href="../index.html#work">work</a>
+        <a href="../index.html#writing">writing</a>
+        <a href="https://github.com/Daisentaur" rel="me noopener" target="_blank">github&nbsp;&#8599;</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <article>
+      <div class="post-head post">
+        <a class="back" href="../index.html#writing">&#8592; writing</a>
+        <span class="meta">Build journal &middot; 2026-07-07</span>
+        <h1>My bots lie to me when I sleep</h1>
+      </div>
+
+      <div class="post-body post">
+        <p>
+          I don't know how scrapers work. I wanted one anyway.
+        </p>
+        <p>
+          The itch was small and specific: my university ERP makes me click
+          through four pages to see one number, my attendance sits behind a
+          login that expires every few hours, and course registration opens at
+          some ungodly hour (for me) and the server falls over the second it
+          does. I wanted a thing that would just do all this for me while I was
+          doing something else, ideally sleeping.
+        </p>
+        <p>
+          The problem is that having my eyes closed turns out to be the entire
+          difficulty, and I didn't find that out until the bots started lying
+          to me.
+        </p>
+
+        <h2>I didn't want a scraper, I wanted a base</h2>
+        <p>
+          I didn't want to write one bot. I wanted a base I could clone for
+          whatever site annoyed me next &mdash; attendance today, course
+          registration in three weeks, some price or restock later. So the
+          first decision wasn't code, it was picking the one boring thing
+          everything else hangs off: drive a real browser, don't fake HTTP
+          requests. A real browser can do anything I can do on a site because
+          it <em>is</em> a browser. The tool for that is Playwright, and the
+          reason I picked it over the older options is one feature &mdash; it
+          ships a recorder.
+        </p>
+        <p>
+          That recorder matters more than it sounds, because it means I never
+          actually write the part I don't understand. I click through the task
+          by hand once, and it writes the Python. I don't know how to address
+          "the third button inside the login iframe." I don't have to. I just
+          have to know how to click it.
+        </p>
+        <p>
+          Once again, the best code is the code you don't write. Here it was
+          the code I didn't know how to write in the first place.
+        </p>
+
+        <h2>The first thing that betrayed me worked perfectly, once</h2>
+        <p>
+          I recorded the attendance task. It ran. I was thrilled for about 3
+          hours.
+        </p>
+        <p>
+          Then it died. Same code, same site, nothing changed. I re-recorded
+          it, it worked again, and then it died again the day after. Being new
+          to this I assumed I'd done something wrong each time &mdash; until I
+          actually looked at what the recorder had written down, and found this
+          sitting in the middle of my selectors:
+        </p>
+        <pre><code>iframe[name="8DEF612E3BDC1AC69CD3875DA76511DB"]</code></pre>
+        <p>
+          That 32-character blob is not an address. It's a fresh random id the
+          site mints every time you log in. The recorder had faithfully written
+          down <em>this session's</em> id, which is exactly as useful as
+          writing down today's parking spot number and expecting your car there
+          tomorrow. Every re-recording baked in a new one, which is why
+          re-recording "fixed" it for exactly one day at a time.
+        </p>
+        <p>
+          This taught me quite a bit, and annoyed me quite a bit more, honestly.
+        </p>
+        <div class="callout">
+          <strong>Lesson.</strong> If a selector contains a blob of hex, it
+          isn't telling you where something is &mdash; it's telling you who you
+          were when you looked. You want the parts that don't change: the button
+          that says the word <code>Download</code>, not the box with the random
+          name around it.
+        </div>
+
+        <h2>Then a browser lied to me depending on whether I was watching</h2>
+        <p>
+          Next site, the fee page, opened its report in a popup. Watching the
+          browser do it, everything worked. Running it for real &mdash;
+          headless, no window, the way it'd actually run at night &mdash; the
+          popup came up completely blank and sat there forever.
+        </p>
+        <p>
+          Same code. The only difference was whether a window was on my screen.
+        </p>
+        <p>
+          It turns out that when you run Chrome "headless" it quietly uses a
+          stripped-down build of itself, and that stripped-down build handles
+          some popup and JavaScript things differently than the real one. So the
+          site rendered fine when I was looking and rendered nothing when I
+          wasn't. This is a genuinely unsettling category of bug &mdash; it only
+          exists when you're not there to see it &mdash; and it's the exact bug
+          an unattended bot is built to walk into.
+        </p>
+        <p>
+          The fix was one line telling it to use the full browser even with no
+          window.
+        </p>
+        <div class="callout">
+          <strong>The lesson, bigger than the fix.</strong> "It worked when I
+          tested it" means nothing if you tested it in a different world than
+          the one it runs in.
+        </div>
+
+        <h2>The page that pretended to load</h2>
+        <p>
+          Same popup, once it wasn't blank anymore, had one more trick. I told
+          the bot, reasonably, to wait for the page to finish loading before
+          grabbing the report. It waited. And waited. And timed out, every time,
+          on a page that had visibly finished loading ages ago.
+        </p>
+        <p>
+          Some pages never actually fire the "I'm done" signal &mdash; this one
+          opens as an empty shell and quietly stuffs the content in later, so
+          "wait until loaded" waits for a moment that never comes. The answer
+          isn't to wait for the page, it's to wait for the <em>thing you
+          actually want</em> &mdash; poll until the Download button exists, then
+          move. Stop trusting the page to tell you it's ready. Watch for the
+          specific thing and ignore everything else.
+        </p>
+
+        <h2>The base isn't clever. It's paranoid, on purpose.</h2>
+        <p>
+          Here's the thing I didn't expect going in. I thought the hard part
+          would be the scraping, the clicking, the selectors, the clever bits.
+          It wasn't. The recorder writes the clever bits. The hard part was that
+          I'm not there.
+        </p>
+        <p>
+          So almost all the actual engineering ended up being about that
+          absence. Every time a task dies, it screenshots every open window,
+          saves the page, and sends the picture to my phone with the error. Not
+          a log I have to go read &mdash; the actual image of what the bot saw
+          at the moment it gave up. Most of the time the answer was in the
+          picture: a login wall I didn't expect, a cookie banner over the
+          button, a page I'd never seen. I fixed every single one of the bugs
+          above by looking at that screenshot, not by thinking about it.
+        </p>
+        <p>
+          The bots run on my old laptop in the corner that never sleeps. When my
+          attendance shows up on my phone at 7:57AM every morning, I don't think
+          about any of this. That's the whole point &mdash; the paranoia is
+          upfront so the mornings are boring.
+        </p>
+
+        <h2>I still don't really know how scrapers work</h2>
+        <p>
+          I want to be honest about that. I couldn't write one of these
+          selectors from scratch to save my life. What I have instead is a small
+          base that survives me: a recorder that writes the parts I don't
+          understand, and a wrapper around it whose entire job is to fail
+          loudly, on my phone, with a picture, so that "3am with nobody home" is
+          a solvable problem instead of a silent one.
+        </p>
+        <p>
+          Five bots run on that laptop now. I learned more about the web from
+          the four ways they broke my heart and mind than from anything that
+          went right.
+        </p>
+      </div>
+
+      <div class="post-foot post">
+        <p>
+          Code:
+          <a href="https://github.com/Daisentaur/spider-base" rel="noopener" target="_blank">
+            github.com/Daisentaur/spider-base&nbsp;&#8599;
+          </a>
+          <br />
+          <a href="../index.html#writing">&#8592; back to writing</a>
+        </p>
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer wrap">
+    <p>&copy; <span id="year"></span> daisentaur</p>
+    <p class="footer-links">
+      <a href="https://github.com/Daisentaur" rel="me noopener" target="_blank">GitHub</a>
+    </p>
+  </footer>
+
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
