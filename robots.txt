@@ -1,0 +1,18 @@
+# ───────────────────────────────────────────────
+#   daisentaur.dev
+#   Hello, curious human. Most who open this file
+#   are neither curious nor human.
+#
+#   Bots: the door's open. Search engines, index away.
+#   No traps, no mazes, no Disallow. Be well-behaved
+#   and we'll get along fine.
+#
+#   If you typed /robots.txt by hand — good instinct.
+#   Say hi: me@daisentaur.dev
+#
+#   (My other bots lie to me when I sleep. Please don't.)
+#        → /blog/spider-base.html
+# ───────────────────────────────────────────────
+
+User-agent: *
+Allow: /
