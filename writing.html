@@ -3,24 +3,16 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>daisentaur — Darsh</title>
+        <title>writing — daisentaur</title>
 
         <!-- Blocking: sets the theme before first paint (no flash). -->
         <script src="theme.js"></script>
 
-        <meta
-            name="description"
-            content="Personal site of Darsh (daisentaur) — ECE undergrad working on low-level systems, security, and the messy parts of finance."
-        />
-
-        <!-- Open Graph: controls how the link looks when shared on social/in messages -->
-        <meta property="og:title" content="daisentaur — Darsh" />
-        <meta
-            property="og:description"
-            content="ECE undergrad. Low-level systems, security, and the messy parts of finance."
-        />
+        <meta name="description" content="Build journals and teardowns by Darsh (daisentaur) — notes from small projects in low-level systems, security, and automation." />
+        <meta property="og:title" content="writing — daisentaur" />
+        <meta property="og:description" content="Notes, build logs, and the occasional teardown." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://daisentaur.dev" />
+        <meta property="og:url" content="https://daisentaur.dev/writing.html" />
 
         <link rel="icon" href="favicon.ico" sizes="any" />
         <link rel="icon" type="image/png" href="favicon-32.png" sizes="32x32" />
@@ -55,23 +47,46 @@
         </header>
 
         <main id="main">
-            <section class="hero wrap">
-                <p class="eyebrow">
-                    Darsh <span class="sep">/</span> daisentaur
+            <section class="block wrap">
+                <h2 class="section-label">writing</h2>
+                <p class="block-intro">
+                    Notes, build logs, and the occasional teardown.
                 </p>
-                <h1>
-                    I build small things to
-                    <em>understand</em> the big ones.
-                </h1>
-                <p class="lede">
-                    ECE undergrad working through low-level systems, security,
-                    and the messier corners of finance — one deliberately-scoped
-                    project at a time. This site is a work in progress, much
-                    like everything on it.
-                </p>
-                <div class="hero-links">
-                    <a href="work.html" class="btn">Work</a>
-                    <a href="writing.html" class="btn btn-ghost">Writing</a>
+                <div class="post-list">
+                    <a class="post-card" href="blog/pw-manager.html">
+                        <span class="post-date">2026-07-15</span>
+                        <span class="post-title">One forgotten word and it's all gone. That's the feature.</span>
+                        <span class="post-blurb">
+                            Build journal for pw-manager — leaving browser password storage for
+                            one encrypted file, via a Rust detour that produced seven lines and
+                            a lock with no forgiveness built in.
+                        </span>
+                    </a>
+                    <a class="post-card" href="blog/spider-base.html">
+                        <span class="post-date">2026-07-07</span>
+                        <span class="post-title">My bots lie to me when I sleep</span>
+                        <span class="post-blurb">
+                            Build journal for spider-base — the hard part of an unattended bot
+                            isn't the scraping, it's that you're not there when it breaks.
+                        </span>
+                    </a>
+                    <a class="post-card" href="blog/markitdown-web.html">
+                        <span class="post-date">2026-07-03</span>
+                        <span class="post-title">The cheapest file is a Markdown file</span>
+                        <span class="post-blurb">
+                            A little self-hosted service that turns any file into Markdown, so my LLM
+                            agents stop paying for formatting they never read — assembled mostly from
+                            tools I didn't write.
+                        </span>
+                    </a>
+                    <a class="post-card" href="blog/claude-usage-notifier.html">
+                        <span class="post-date">2026-05-20</span>
+                        <span class="post-title">A 403, a fake browser, and my own session cookie</span>
+                        <span class="post-blurb">
+                            Building a desktop notifier for my claude.ai usage — and learning the
+                            hard way that Cloudflare fingerprints the TLS handshake, not just the headers.
+                        </span>
+                    </a>
                 </div>
             </section>
         </main>

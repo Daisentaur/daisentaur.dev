@@ -3,24 +3,16 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>daisentaur — Darsh</title>
+        <title>work — daisentaur</title>
 
         <!-- Blocking: sets the theme before first paint (no flash). -->
         <script src="theme.js"></script>
 
-        <meta
-            name="description"
-            content="Personal site of Darsh (daisentaur) — ECE undergrad working on low-level systems, security, and the messy parts of finance."
-        />
-
-        <!-- Open Graph: controls how the link looks when shared on social/in messages -->
-        <meta property="og:title" content="daisentaur — Darsh" />
-        <meta
-            property="og:description"
-            content="ECE undergrad. Low-level systems, security, and the messy parts of finance."
-        />
+        <meta name="description" content="Projects by Darsh (daisentaur), pulled live from public GitHub — low-level, security, and automation experiments." />
+        <meta property="og:title" content="work — daisentaur" />
+        <meta property="og:description" content="Projects pulled live from my public GitHub. Newest pushes float to the top." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://daisentaur.dev" />
+        <meta property="og:url" content="https://daisentaur.dev/work.html" />
 
         <link rel="icon" href="favicon.ico" sizes="any" />
         <link rel="icon" type="image/png" href="favicon-32.png" sizes="32x32" />
@@ -55,24 +47,24 @@
         </header>
 
         <main id="main">
-            <section class="hero wrap">
-                <p class="eyebrow">
-                    Darsh <span class="sep">/</span> daisentaur
+            <section class="block wrap">
+                <h2 class="section-label">work</h2>
+                <p class="block-intro">
+                    Pulled live from my public GitHub. The newest pushes float
+                    to the top.
                 </p>
-                <h1>
-                    I build small things to
-                    <em>understand</em> the big ones.
-                </h1>
-                <p class="lede">
-                    ECE undergrad working through low-level systems, security,
-                    and the messier corners of finance — one deliberately-scoped
-                    project at a time. This site is a work in progress, much
-                    like everything on it.
-                </p>
-                <div class="hero-links">
-                    <a href="work.html" class="btn">Work</a>
-                    <a href="writing.html" class="btn btn-ghost">Writing</a>
+
+                <div id="repos" class="repo-grid" aria-live="polite">
+                    <p class="repo-status" id="repo-status">
+                        Loading projects from GitHub…
+                    </p>
                 </div>
+
+                <p class="block-foot">
+                    <a href="https://github.com/Daisentaur?tab=repositories" rel="noopener" target="_blank">
+                        See everything on GitHub&nbsp;↗
+                    </a>
+                </p>
             </section>
         </main>
 

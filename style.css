@@ -406,9 +406,6 @@ a:hover {
         gap: 14px;
         font-size: 0.78rem;
     }
-    .site-header nav a:nth-child(3) {
-        display: none;
-    } /* hide 'writing' on tight screens */
     .hero {
         padding: 60px 24px 50px;
     }
