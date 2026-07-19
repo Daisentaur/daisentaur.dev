@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>I shot my passwords across the internet. Pt.2 of the password manager — daisentaur</title>
+  <meta name="description" content="Build journal: taking my terminal password manager mobile — one QR scan, decryption in the phone's browser, a knight that dresses for the occasion, and two bugs that taught me more than the feature did." />
+
+  <meta property="og:title" content="I flung my passwords across the internet, on purpose." />
+  <meta property="og:description" content="Build journal for The Paladin's mobile chapter — why going HTTPS made the code smaller, why ciphertext can travel anywhere, and how a QR code became abstract art." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://daisentaur.dev/blog/paladin-mobile.html" />
+
+  <link rel="icon" href="../favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" href="../favicon-32.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    .post { max-width: 680px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+    .post-head { padding: 70px 0 40px; border-bottom: 1px solid var(--line); }
+    .post-head .back { font-size: 0.85rem; color: var(--ink-mute); }
+    .post-head .back:hover { color: var(--accent); }
+    .post-head .meta {
+      display: block; margin: 28px 0 12px;
+      font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-mute);
+    }
+    .post-head h1 {
+      font-family: var(--font-display); font-weight: 500;
+      font-size: clamp(1.9rem, 5vw, 2.8rem); line-height: 1.12;
+      letter-spacing: -0.02em; margin: 0;
+    }
+    .post-body { padding: 44px 0 30px; }
+    .post-body h2 {
+      font-family: var(--font-display); font-weight: 500;
+      font-size: 1.5rem; margin: 48px 0 14px; letter-spacing: -0.01em;
+    }
+    .post-body p { color: var(--ink-soft); margin: 0 0 18px; }
+    .post-body ul { color: var(--ink-soft); padding-left: 22px; margin: 0 0 18px; }
+    .post-body li { margin-bottom: 8px; }
+    .post-body strong { color: var(--ink); font-weight: 500; }
+    .post-body code {
+      font-family: var(--font-mono); font-size: 0.86em;
+      background: var(--paper-2); border: 1px solid var(--line);
+      padding: 1px 5px; border-radius: 3px;
+    }
+    .post-body pre {
+      background: var(--paper-2); border: 1px solid var(--line);
+      padding: 16px 18px; overflow-x: auto; margin: 0 0 22px;
+      font-size: 0.84rem; line-height: 1.55;
+    }
+    .post-body pre code { background: none; border: none; padding: 0; }
+    .callout {
+      border-left: 3px solid var(--accent);
+      background: var(--paper-2);
+      padding: 14px 18px; margin: 0 0 22px;
+      font-size: 0.92rem; color: var(--ink-soft);
+    }
+    .callout strong { color: var(--accent); }
+    .post-foot {
+      border-top: 1px solid var(--line); padding: 30px 0 70px;
+      font-size: 0.9rem; color: var(--ink-mute);
+    }
+    .post-foot a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="mark" href="../index.html" style="color:inherit;text-decoration:none">daisentaur<span class="dot">.dev</span></a>
+      <nav aria-label="Primary">
+        <a href="../index.html#about">about</a>
+        <a href="../index.html#work">work</a>
+        <a href="../index.html#writing">writing</a>
+        <a href="https://github.com/Daisentaur" rel="me noopener" target="_blank">github&nbsp;&#8599;</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <article>
+      <div class="post-head post">
+        <a class="back" href="../index.html#writing">&#8592; writing</a>
+        <span class="meta">Build journal &middot; 2026-07-19</span>
+        <h1>I shot my passwords across the internet. Pt.2 of the password manager</h1>
+      </div>
+
+      <div class="post-body post">
+        <p>
+          Last time I wrote about building my own password manager: one
+          encrypted file, one master password, a pixel knight, everything on
+          my laptop. Which left one hole big enough to drive a truck through.
+          My passwords live on the laptop. My logins happen, a lot many times,
+          on my phone, usually while the laptop is in my room and me in my class
+         or maybe I'm a bit too comfortable to move ;p
+        </p>
+        <p>
+          So this is the mobile chapter: how the vault got to my phone
+          without betraying the whole point of the project, and the two bugs
+          along the way that I thought were pretty interesting.
+        </p>
+
+        <h2>The ideas I had to kill first</h2>
+        <p>
+          The obvious paths were all wrong for boring reasons. Run the CLI on
+          the phone in a terminal app? Android only, and me and way too many
+          others in this world carry iPhones. Export everything to some
+          established password app's format? Then my tool's mobile story is
+          "use a different tool," which hurts to type. Build an actual iPhone
+          app? I hate myself but I haven't fallen that far yet.
+        </p>
+        <p>
+          The path that survived: the one app every phone already has.
+          <strong>The browser.</strong> Safari, Chrome, Firefox — they're all
+          standing there, fully capable, already installed. If my vault could
+          open as a web page, every phone on earth is supported and I ship
+          nothing to any app store.
+        </p>
+        <p>
+          But a page <em>where</em>? I'm not putting my passwords on a
+          server. That's the exact thing this project exists to not do.
+        </p>
+
+        <h2>The realization that made it all click</h2>
+        <p>
+          I was thinking for a while before I had moment where i went <strong>WAIT!</strong>
+          my vault file is <em>already</em> safe to send anywhere. That's not
+          unbased confidence that no one will look, I designed it this way —
+          the file is noise without  the master password, which lives in my
+          head and nowhere else. I already tell people to back the vault up
+          to USB sticks and clouds they don't trust. Sending it over the
+          internet is the same move with extra steps.
+        </p>
+        <p>
+          So the architecture became: my laptop serves a single web page with
+          the <em>encrypted</em> vault baked inside it. My phone opens the
+          page, I type the master password <strong>on the phone</strong>, and
+          the unscrambling happens right there in the phone's browser. The
+          laptop never sees the password. The network never carries anything
+          but gibberish. The phone stores nothing — close the tab and it's
+          like it never happened.
+        </p>
+        <div class="callout">
+          <strong>The lesson that surprised me most.</strong> I assumed doing
+          this "properly" over HTTPS would be the annoying compliance part.
+          Backwards. Browsers <em>refuse</em> to give a plain-HTTP page their
+          good tools — the built-in crypto engine, the clipboard — so the
+          insecure version would have needed <em>more</em> code, shipping my
+          own crypto library to do badly what the browser does natively.
+          Going more secure made the whole thing smaller. That one still
+          makes me glad I sat and thought about it for as long as I did and
+          didn't just start writing up the first solution that came to me.
+        </div>
+        <p>
+          The HTTPS itself comes from a neat free thing: cloudflared's quick
+          tunnels. One command, no account, and your laptop gets a random
+          real-certificate URL that works from any network. My tool runs it
+          for you, prints the URL as a QR code in the terminal, and that's
+          the entire user experience: run <code>paladin mobile</code>, scan
+          with the phone camera, type the one secret word. Done.
+        </p>
+        <p>
+          And because I already own a domain, there's a mode where the QR
+          always points at my own subdomain instead of a random one — same
+          everything, but bookmarkable. The knight shows up on the phone too,
+          obviously, dressed in whatever theme your terminal was wearing when
+          you made the QR. Details matter.
+        </p>
+
+        <h2>Into the trenches #1: my phone held the door open</h2>
+        <p>
+          First real test went great — copied passwords on my phone, felt
+          like I made soemthing worthwhile. Then I pressed Ctrl+C to end the
+          session on my laptopand my terminal exploded into a wall of traceback
+          long enough to need make .
+        </p>
+        <p>
+          The cause is almost sweet. My little web server handled one
+          visitor at a time, and my phone — being a polite, modern browser —
+          keeps its connection open in case it needs anything else. So when I
+          told the server to shut down, it stood there waiting for my phone
+          to <em>finish</em>, forever, like someone holding a door for a
+          person who isn't coming. My second, angrier Ctrl+C landed in the
+          middle of the cleanup code and boom.
+        </p>
+        <div class="callout">
+          <strong>Lesson.</strong> The bug wasn't in anything I thought was
+          hard. The crypto worked first try. What broke was a door being held
+          open politely. Distributed systems people have known this forever
+          and now I've paid my own tiny tuition: the failure is always in the
+          waiting, not the working.
+        </div>
+
+        <h2>Into the trenches #2: abstract art</h2>
+        <p>
+          I also put the QR code inside the terminal app itself, themed to
+          your colors, very proud of it. On my screen during development:
+          beautiful. First proper look on a real vault: the QR came out as…
+          vertical slices. A modern art piece. Completely unscannable.
+        </p>
+        <p>
+          A QR code is a <em>spatial</em> code — every little square's
+          position is data. My layout gave the QR a box slightly too narrow,
+          and the terminal did what terminals do with text that doesn't fit:
+          wrapped it to the next line. Perfectly reasonable for text.
+          Doesn't fit for a QR (pun intended). Every wrapped row moved hundreds
+          of squares to coordinates where they meant nothing.
+        </p>
+        <div class="callout">
+          <strong>Lesson.</strong> My test checked that the QR
+          <em>rendered</em>. It never checked that it rendered
+          <em>unbroken</em>. Those are different claims, and the gap between
+          them is exactly where bugs live. The fix pins every width to the
+          QR's real size, and the new test measures every rendered line like
+          a suspicious tailor.
+        </div>
+
+        <h2>The part I didn't build</h2>
+        <p>
+          You can't add or edit passwords from the phone. That's not laziness
+          (okay, it's principled laziness) — the moment two devices can both
+          write, you inherit the entire science of syncing conflicting edits,
+          and I've read enough to know that road eats hobby projects whole.
+          The phone reads, the laptop writes, refresh gets you the fresh
+          vault. If real life ever proves I need phone-side edits, I'll get
+          to that complexity then. As they say, burn that bridge when you get
+          to it or whatever.
+        </p>
+        <p>
+          One small thing I did add instead of a lock: every time any device
+          loads the page, a line prints in my terminal with the time. I
+          didn't restrict who can open the link — the encryption already
+          answers that question — but now I <em>see</em> every fetch as it
+          happens, and one keypress ends the session. Visibility turned out
+          to be cheaper than restriction and weirdly more reassuring.
+        </p>
+
+        <h2>Where this leaves things</h2>
+        <p>
+          The tool I wanted at the start of this whole project now actually
+          exists end to end: my passwords live in one unreadable file on my
+          laptop, guarded by one word in my head, and when I need one on my
+          phone I scan a QR, type the word, and tap. The pause while it
+          unlocks is still there — on the phone it's even a touch longer, and
+          I still appreciate why.
+        </p>
+        <p>
+          The knight travels now. He dresses for the occasion. And every
+          device that knocks on his door gets written down.
+        </p>
+      </div>
+
+      <div class="post-foot post">
+        <p>
+          Code:
+          <a href="https://github.com/Daisentaur/password-manager" rel="noopener" target="_blank">
+            github.com/Daisentaur/password-manager&nbsp;&#8599;
+          </a>
+          &middot; install: <code>pipx install basic-password-manager</code>
+          &middot; part one:
+          <a href="pw-manager.html">the vault itself</a>
+          <br />
+          <a href="../index.html#writing">&#8592; back to writing</a>
+        </p>
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer wrap">
+    <p>&copy; <span id="year"></span> daisentaur</p>
+    <p class="footer-links">
+      <a href="https://github.com/Daisentaur" rel="me noopener" target="_blank">GitHub</a>
+    </p>
+  </footer>
+
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -3,10 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>One forgotten word and it's all gone. That's the feature. — daisentaur</title>
-
-  <!-- Blocking: sets the theme before first paint (no flash). -->
-  <script src="../theme.js"></script>
+  <title>I can't even read what the coolest tool I made makes. — daisentaur</title>
   <meta name="description" content="Build journal: writing my own password manager to finally leave browser password storage — a Rust detour that produced seven lines, three small crypto ideas, and a file nobody can read, including me if I forget one word." />
 
   <meta property="og:title" content="One forgotten word and it's all gone. That's the feature." />
@@ -80,14 +77,10 @@
     <div class="wrap">
       <a class="mark" href="../index.html" style="color:inherit;text-decoration:none">daisentaur<span class="dot">.dev</span></a>
       <nav aria-label="Primary">
-        <a href="../about.html">about</a>
-        <a href="../work.html">work</a>
-        <a href="../writing.html">writing</a>
+        <a href="../index.html#about">about</a>
+        <a href="../index.html#work">work</a>
+        <a href="../index.html#writing">writing</a>
         <a href="https://github.com/Daisentaur" rel="me noopener" target="_blank">github&nbsp;&#8599;</a>
-        <button class="theme-toggle" type="button" aria-label="Toggle dark and light theme" title="Toggle theme">
-          <svg class="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-          <svg class="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-        </button>
       </nav>
     </div>
   </header>
@@ -97,24 +90,25 @@
       <div class="post-head post">
         <a class="back" href="../index.html#writing">&#8592; writing</a>
         <span class="meta">Build journal &middot; 2026-07-15</span>
-        <h1>One forgotten word and it's all gone. That's the feature.</h1>
+        <h1>I can't even read what the coolest tool I made makes.</h1>
       </div>
 
       <div class="post-body post">
         <p>
           For years my browser has known every password I own. Which always
-          felt a little off &mdash; my most sensitive secrets, living inside
+          felt a little off. My most sensitive secrets, living inside
           the most attacked program on my computer, synced to a cloud I don't
-          control, guarded by whoever is logged into Chrome. I wanted them
+          control, guarded by whoever is logged into my firefox. I wanted them
           somewhere that was <em>mine</em>: one encrypted file, on my disk,
-          openable with one word that only exists in my head.
+          openable with one word that only exists in my head and maybe a secret
+          notebook(super secret info).
         </p>
         <p>
-          I also wanted to know how a password manager actually works. Not
-          use one &mdash; understand one. What's inside the vault? Where does
-          the master password go? What happens, mechanically, when you type
-          it wrong? Turns out the answers are smaller and prettier than I
-          expected, and the whole thing fits in about 120 lines of Python.
+          I also wanted to know how a password manager actually works.
+          What's inside the vault? Where does the master password go? What
+          happens, mechanically, when you type it wrong? Turns out the
+          answers are smaller and prettier than I expected, and the whole
+          thing fits in about 120 lines of Python.
         </p>
         <p>
           But first I have to admit to the detour.
@@ -125,21 +119,20 @@
           The original plan was grander: this would also be the project where
           I finally learn Rust. Two birds, one repo. I installed the
           toolchain, made the folders, wrote <code>fn derive_key() {}</code>
-          &mdash; an empty function with a promising name &mdash; and then
+          ,an empty function with a promising name and then
           did not touch it again for days. Total output: seven lines, most of
           them punctuation.
         </p>
         <p>
-          It wasn't Rust's fault. It's that I'd stacked two learning curves
-          on top of each other &mdash; a new language <em>and</em> a domain I
-          didn't understand &mdash; and then wondered why the hill felt
-          vertical. Meanwhile the actual goal, the one with a point to it,
+          It wasn't Rust's fault (only partially). It's that I'd stacked two
+          to-do's on top of each other a new language <em>and</em> a domain I
+          didn't understand. Meanwhile the actual goal, the one with a point to it,
           was "get my passwords out of the browser," and that goal didn't
           care what language it happened in.
         </p>
         <div class="callout">
-          <strong>Lesson.</strong> Pick one thing to learn per project. If
-          you genuinely want the tool at the end, learn the domain in a
+          <strong>Lesson.</strong> Pick one thing to learn per project, or you'll get
+          your ass whooped . If you genuinely want the tool at the end, learn the domain in a
           language you already speak. The other language will still be there
           &mdash; and next time you'll bring a domain you already understand,
           which is the ideal way to meet it.
@@ -154,24 +147,23 @@
         <p>
           <strong>One: turn a word into a key, slowly, on purpose.</strong>
           Encryption wants a key: 32 bytes of pure randomness. My master
-          password is not that. A thing called Argon2 bridges the gap &mdash;
-          it chews on the password and always spits out the same 32 bytes.
+          password is not that. A thing called Argon2 bridges the gap.
+          It chews on the password and always spits out the same 32 bytes.
           The clever part is that it's engineered to be <em>slow and
           memory-hungry</em>: every single guess costs real time and a big
-          chunk of RAM. That pause when I unlock my vault? That's not my
-          code being sluggish. That's the lock being hard to pick, for me
-          and for anyone who steals the file.
+          chunk of RAM. The pause when I unlock my vault? That's not my
+          code being sluggish and unoptimised (maybe a little). That's the
+          lock being hard to pick, for me and for anyone who steals the file.
         </p>
         <p>
-          <strong>Two: encryption that screams instead of lying.</strong>
+          <strong>Two: encryption that talks back instead of staying quiet.</strong>
           The vault is sealed with something called authenticated encryption.
-          Feed it the wrong password &mdash; or a file where even a single
-          bit was flipped, by corruption or by tampering &mdash; and it
-          doesn't hand back garbage that looks plausible. It refuses,
-          loudly. My test for this literally flips one byte in the file and
-          checks that the vault screams. There is no silent failure mode,
-          which for a box full of passwords is the only acceptable
-          personality.
+          Feed it the wrong password or a file where even a single
+          bit was flipped, by corruption or by tampering, and it
+          doesn't hand back garbage that looks plausible. My test for this
+          literally flips one byte in the file and checks that the vault says.
+          There is no silent failure mode, which for a box full of passwords
+          is the only acceptable personality.
         </p>
         <p>
           <strong>Three: one file.</strong> That's the whole storage layer.
@@ -180,10 +172,10 @@
           Backing it up is <code>cp</code>.
         </p>
         <div class="callout">
-          <strong>The part that surprised me most.</strong> Two pieces of the
+          <strong>The part that I had to really get.</strong> Two pieces of the
           vault file sit there <em>unencrypted</em>, readable by anyone: the
-          salt and the nonce. My gut said that must be a leak. It isn't
-          &mdash; they're not secrets, they're randomizers, and the whole
+          salt and the nonce. My gut said that is information, information that
+          maybe can be used . Turns out they're not they're randomizers, and the whole
           design assumes the attacker can see them. Learning <em>why</em>
           that's fine taught me more about crypto than any of the parts that
           are hidden.
@@ -192,19 +184,19 @@
           And I should be honest the same way I always am: I didn't write
           the cryptography. Smarter people spent decades on Argon2 and AES
           so that I could call two library functions. My 120 lines are the
-          tape around them &mdash; the file format, the commands, the
+          tape around them. The file format, the commands, the
           decisions. As always, the best code is the code I didn't write.
         </p>
 
         <h2>The word that is stored nowhere</h2>
         <p>
-          Here's the detail that reorganized my brain. My master password is
-          not saved anywhere. Not hashed, not hidden, not encrypted &mdash;
-          <em>nowhere</em>. It exists in my head and, for a few seconds while
-          I type it, in memory. So how does the vault know when I typo it?
-          It doesn't, really. It derives a key from whatever I typed, tries
-          to decrypt, and the decryption itself screams if the key is wrong.
-          "Wrong password" is just the scream, translated.
+          Extremly Importantly. My master password is not saved anywhere. Not
+          hashed, not hidden, not encrypted absolutely <em>nowhere</em>. It
+          exists in my head and, for a few seconds while I type it, in memory.
+          So how does the vault know when I typo it? It technically doesn't.
+          It derives a key from whatever I typed, tries to decrypt, and the
+          decryption itself screams if the key is wrong. "Wrong password" is
+          just the scream, translated.
         </p>
         <p>
           Which has a consequence worth sitting with: there is no reset. No
@@ -222,31 +214,20 @@
         <p>
           Then I did something I'd never done: put it on PyPI, the place
           <code>pip install</code> pulls from. Turns out publishing a Python
-          package for the whole world is one config file and two commands,
-          which feels illegal. My first-choice name was taken, so it lives
-          as <code>basic-password-manager</code> &mdash; honest advertising.
-        </p>
-        <p>
-          I also learned, the embarrassing way, that GitHub and PyPI are two
-          completely separate publishes. Pushing code to GitHub updates
-          nothing on PyPI; they only stay in sync because I make them. And
-          somewhere in the middle of all this I "tidied up" some old files
-          using GitHub's website editor while my laptop held the real
-          history, and the two histories drifted apart until git refused my
-          push entirely. The fix was a force-push, which is git's way of
-          saying "one of you is wrong, choose." The lesson was simpler:
-          edit the repo from one place. The website editor is a loaded gun
-          left on the table.
+          package for the whole world is one config file and two commands.
+          My first-choice name was taken, so it lives as
+          <code>basic-password-manager</code> &mdash; honest advertising ;p
         </p>
 
         <h2>The terminal app that ignored its own themes</h2>
         <p>
-          Version two grew a proper interface &mdash; not a window, a
+          Version two grew a proper interface. Not a window but a
           <em>terminal</em> app, the kind with panels and keyboard-driven
           everything. I shamelessly copied the look of
           <a href="https://github.com/webstonehq/tuxedo" rel="noopener" target="_blank">tuxedo</a>,
           a todo app whose muted slate palette I'd been admiring, by reading
-          its theme file and lifting the exact colors.
+          its theme file and lifting the exact colors. I also love the tool itself
+          and use it myself.
         </p>
         <p>
           Then I noticed something: the app had a theme switcher buried in a
@@ -254,10 +235,11 @@
           rest of the screen stayed stubbornly slate. The bug was my
           admiration: I'd hardcoded tuxedo's colors into every surface,
           which meant no theme could ever touch them. The framework
-          underneath had a whole theming system &mdash; you register your
+          underneath had a whole theming system, which I obviouslt didn't
+          read my first time stealing their deisgn choices. You register your
           palette, you paint with variables, everything re-colors itself
           live &mdash; and I had painted over it like wallpaper over a
-          window.
+          window and was thinking why the weather was so consistent.
         </p>
         <div class="callout">
           <strong>Lesson.</strong> The fix <em>deleted</em> code. Half my
@@ -265,18 +247,6 @@
           every theme worked everywhere. When the fix is deletion, the bug
           was you doing the framework's job worse than the framework.
         </div>
-
-        <h2>Changing the locks on a lock that isn't stored</h2>
-        <p>
-          One more small elegance before I close. Changing the master
-          password sounds like editing a record &mdash; but there's no
-          record, remember? Nothing stored, nothing to edit. So "change the
-          master password" is actually: unlock everything with the old word,
-          re-seal everything under the new one. The old word doesn't get
-          deactivated &mdash; it becomes mathematically irrelevant. You
-          aren't updating a password. You're re-locking the safe with a
-          different key and melting the old one.
-        </p>
 
         <h2>Where this goes next</h2>
         <p>
@@ -295,8 +265,7 @@
           In the meantime: my browser has forgotten every password it ever
           knew, and a small unreadable file in my home folder knows them
           all. I open it twenty times a day with one word and a one-second
-          pause. The pause used to annoy me. Now I know it's the whole
-          point.
+          pause. And man do I love why that pause is there.
         </p>
       </div>
 
