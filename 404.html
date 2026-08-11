@@ -45,14 +45,7 @@
             .oops-text {
                 flex: 1;
                 display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
-            .oops-arrow {
-                height: clamp(120px, 24vh, 230px);
-                width: auto;
-                margin-left: 6px;
+                justify-content: center;
             }
             .oops-msg {
                 margin: 0;
@@ -62,6 +55,7 @@
                 line-height: 1.12;
                 letter-spacing: -0.02em;
                 color: var(--ink);
+                text-align: center;
                 max-width: 15ch;
             }
             .oops-msg em {
@@ -76,14 +70,8 @@
                     gap: 20px;
                     padding-top: 36px;
                 }
-                .oops-text {
-                    align-items: center;
-                }
                 .oops-fig img {
                     width: min(52vw, 230px);
-                }
-                .oops-arrow {
-                    height: 120px;
                 }
             }
         </style>
@@ -112,7 +100,6 @@
                 <img src="/apple-touch-icon.png" alt="" />
             </div>
             <div class="oops-text">
-                <img class="oops-arrow" src="/looped-arrow.png" alt="" />
                 <p class="oops-msg">that's not there, maybe <em>something else</em></p>
             </div>
         </main>
