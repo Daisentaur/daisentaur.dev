@@ -23,44 +23,67 @@
         <link rel="stylesheet" href="/style.css" />
 
         <style>
-            /* 404 is deliberately its own thing: the site's fonts + colours,
-               but a big cardboard-figure backdrop and no hero/footer chrome. */
+            /* 404: the site's display font, its own two-column layout.
+               Figure and arrow are real in-flow elements (not a detached
+               background) so the theme-toggle reveal wipes over them cleanly. */
             .oops {
                 min-height: calc(100vh - 64px);
                 display: flex;
-                justify-content: center;
-                padding: 34px 24px 0;
-                /* the logo, big and clearly visible behind everything */
-                background-image: url("/apple-touch-icon.png");
-                background-repeat: no-repeat;
-                background-position: center 64%;
-                background-size: min(66vmin, 460px);
+                align-items: center;
+                gap: 4vw;
+                padding: 0 clamp(24px, 6vw, 84px);
             }
-            .oops-inner {
+            .oops-fig {
+                flex: 1;
+                display: flex;
+                justify-content: center;
+            }
+            .oops-fig img {
+                width: min(40vw, 400px);
+                height: auto;
+            }
+            .oops-text {
+                flex: 1;
                 display: flex;
                 flex-direction: column;
-                align-items: center;
-                gap: 6px;
-                color: var(--accent);
+                align-items: flex-start;
+                gap: 8px;
             }
-            /* arrow first — it points up at the top bar */
             .oops-arrow {
-                display: block;
+                height: clamp(120px, 24vh, 230px);
+                width: auto;
+                margin-left: 6px;
             }
             .oops-msg {
                 margin: 0;
-                font-family: var(--font-mono);
-                font-size: clamp(1.05rem, 3.4vw, 1.5rem);
+                font-family: var(--font-display);
+                font-weight: 400;
+                font-size: clamp(1.9rem, 4vw, 3rem);
+                line-height: 1.12;
+                letter-spacing: -0.02em;
                 color: var(--ink);
-                letter-spacing: -0.01em;
+                max-width: 15ch;
             }
-            @media (prefers-reduced-motion: no-preference) {
-                .oops-arrow {
-                    animation: nudge 1.4s ease-in-out infinite;
+            .oops-msg em {
+                font-style: italic;
+                color: var(--accent);
+            }
+            @media (max-width: 640px) {
+                .oops {
+                    flex-direction: column;
+                    justify-content: center;
+                    text-align: center;
+                    gap: 20px;
+                    padding-top: 36px;
                 }
-                @keyframes nudge {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-6px); }
+                .oops-text {
+                    align-items: center;
+                }
+                .oops-fig img {
+                    width: min(52vw, 230px);
+                }
+                .oops-arrow {
+                    height: 120px;
                 }
             }
         </style>
@@ -85,12 +108,12 @@
         </header>
 
         <main id="main" class="oops">
-            <div class="oops-inner">
-                <svg class="oops-arrow" width="34" height="72" viewBox="0 0 34 72" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <line x1="17" y1="68" x2="17" y2="7" />
-                    <polyline points="6,20 17,5 28,20" />
-                </svg>
-                <p class="oops-msg">that's not there, maybe something else</p>
+            <div class="oops-fig">
+                <img src="/apple-touch-icon.png" alt="" />
+            </div>
+            <div class="oops-text">
+                <img class="oops-arrow" src="/looped-arrow.png" alt="" />
+                <p class="oops-msg">that's not there, maybe <em>something else</em></p>
             </div>
         </main>
     </body>
